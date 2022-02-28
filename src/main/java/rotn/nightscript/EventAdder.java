@@ -2,8 +2,7 @@ package rotn.nightscript;
 
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import rotn.nightscript.event_adder.NightscriptEvent;
@@ -64,7 +63,25 @@ public class EventAdder {
             }
             if(event instanceof LivingEvent) {
                 if(event instanceof LivingAttackEvent) {
-
+                    hashMap.put("DamageSource", ((LivingAttackEvent)event).getSource());
+                    hashMap.put("Amount", ((LivingAttackEvent)event).getAmount());
+                }
+                if(event instanceof LivingDeathEvent) {
+                    hashMap.put("Source", ((LivingDeathEvent)event).getSource());
+                }
+                if(event instanceof LivingFallEvent) {
+                    hashMap.put("Distance", ((LivingFallEvent)event).getDistance());
+                    hashMap.put("DamageMultiplier", ((LivingFallEvent)event).getDamageMultiplier());
+                }
+                if(event instanceof LivingDropsEvent) {
+                    hashMap.put("DamageSource", ((LivingDropsEvent)event).getSource());
+                    hashMap.put("Drops", ((LivingDropsEvent)event).getDrops());
+                    hashMap.put("LootingLevel", ((LivingDropsEvent)event).getLootingLevel());
+                    hashMap.put("IsRecentlyHit", ((LivingDropsEvent)event).isRecentlyHit());
+                }
+                if(event instanceof LivingHurtEvent) {
+                    hashMap.put("DamageSource", ((LivingHurtEvent)event).getSource());
+                    hashMap.put("Amount", ((LivingHurtEvent)event).getAmount());
                 }
             }
         }
