@@ -10,12 +10,15 @@ public enum LexerToken {
     SEMICOLON,
     COLON,
     WHEN_KEYWORD,
-    NUMBER,
+    EVENT_LAMBDA,
+    INTEGER,
+    FLOAT,
+    DOUBLE,
     STRING,
     VARIABLE,
     LEFT_SQUARE_BRACKET,
     RIGHT_SQUARE_BRACKET,
 
-
+    SPACE,
     END_OF_FILE
 }

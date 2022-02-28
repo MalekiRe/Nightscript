@@ -1,8 +1,0 @@
-When BlockBreakEvent[World $world, Player $player] {
-    print($world);
-    print($player);
-    kill($player);
-},
-When ServerTickEvent[] {
-    print("doingservertickevent");
-}

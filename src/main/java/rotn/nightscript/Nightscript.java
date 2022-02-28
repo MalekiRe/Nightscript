@@ -15,8 +15,14 @@ import rotn.nightscript.events.BlockEvents;
 import rotn.nightscript.events.LivingEvents;
 import rotn.nightscript.events.MiscEvents;
 import rotn.nightscript.events.TickEvents;
-import rotn.nightscript.parser.FileReader;
-import rotn.nightscript.parser.NodeToken;
+import rotn.nightscript.functionalstuff.FuncArgPair;
+import rotn.nightscript.functionalstuff.Lazy;
+import rotn.nightscript.functionalstuff.Memo;
+import rotn.nightscript.parser.NightscriptParser;
+
+import java.io.IOException;
+
+import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
 
 @Mod(
         modid = Nightscript.MOD_ID,
@@ -28,7 +34,6 @@ public class Nightscript {
     public static final String MOD_ID = "nightscript";
     public static final String MOD_NAME = "Nightscript";
     public static final String VERSION = "1.0-SNAPSHOT";
-    public static NodeToken myNodeToken;
     /**
      * This is the instance of your mod as created by Forge. It will never be null.
      */
@@ -41,7 +46,16 @@ public class Nightscript {
      */
     @Mod.EventHandler
     public void preinit(FMLPreInitializationEvent event) {
-        myNodeToken = FileReader.parseNightscriptFile("/nightscript/nightscript.nts");
+        try {
+            NightscriptParser.doNightscriptParsingAndSetup();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Memo repeat = memoSet.get("repeat");
+        Memo print = memoSet.get("print");
+        Memo one = memoSet.get("1");
+        Memo addOne = memoSet.get("add");
+        new FuncArgPair(repeat, 10, new FuncArgPair(print, new FuncArgPair(addOne, 1.0, new FuncArgPair(addOne, 1.0, 3.0)))).evaluate();
     }
 
     /**
@@ -60,8 +74,6 @@ public class Nightscript {
      */
     @Mod.EventHandler
     public void postinit(FMLPostInitializationEvent event) {
-        NodeToken.printTree(myNodeToken, 0);
-        EventAdder.addNodeTokensToEvent(myNodeToken);
         MainEventsClass mainEventsClass = new MainEventsClass();
     }
 

@@ -1,6 +1,5 @@
 package rotn.nightscript.event_adder;
 
-import org.lwjgl.Sys;
 import rotn.nightscript.parser.NodeToken;
 import rotn.nightscript.parser.Phrase;
 
@@ -62,7 +61,11 @@ public class NightscriptEvent {
         if(eventArg.childTokens.get(0).phrase == Phrase.variable) {
             variable = eventArg.childTokens.get(0).relatedString;
             classType = eventArg.childTokens.get(1).relatedString;
-        } else {
+        } else if(eventArg.childTokens.get(0).phrase == event_lambda) {
+            classType = "event_lambda";
+            variable = eventArg.childTokens.get(0).relatedString;
+        }
+        else {
             classType = eventArg.childTokens.get(0).relatedString;
             variable = eventArg.childTokens.get(1).relatedString;
         }

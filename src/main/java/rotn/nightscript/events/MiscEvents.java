@@ -13,17 +13,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static rotn.nightscript.EventAdder.blockBreakEvents;
+import static rotn.nightscript.EventAdder.checkAndRunAllFunctions;
 
 public class MiscEvents {
     static Set<NightscriptEvent> entityJoinWorldEvents = new HashSet<>();
     @SubscribeEvent
     public static void onEntityJoinWorldEvent(EntityJoinWorldEvent event) {
-        Map<String, Object> eventArguments = EventAdder.createEventArguments(event);
-        for(NightscriptEvent nightscriptEvent : entityJoinWorldEvents) {
-            Map<String, Object> eventVariableArgs = EventAdder.addVariableToEventFuncArguments(eventArguments, nightscriptEvent.eventArguments);
-            for(NightscriptFunction function : nightscriptEvent.nightscriptFunctions) {
-                function.runFunction(eventVariableArgs);
-            }
-        }
+        checkAndRunAllFunctions(event, entityJoinWorldEvents);
     }
 }

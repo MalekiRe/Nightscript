@@ -5,17 +5,18 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
+import rotn.nightscript.event_adder.FunctionDo;
 import rotn.nightscript.event_adder.NightscriptEvent;
 import rotn.nightscript.event_adder.NightscriptEventArgument;
 import rotn.nightscript.event_adder.NightscriptFunction;
 import rotn.nightscript.events.LivingEvents;
+import rotn.nightscript.functionalstuff.Memo;
 import rotn.nightscript.parser.NodeToken;
+import rotn.nightscript.parser.Pair;
 import rotn.nightscript.parser.Phrase;
+import scala.tools.nsc.Global;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static rotn.nightscript.events.TickEvents.*;
 
@@ -28,7 +29,9 @@ public class EventAdder {
     public static Map<Class, Map<String, Object>> eventsToArgsMap = new HashMap<>();
 
     public static void addNodeTokensToEvent(NodeToken token) {
+        NodeToken.printTree(token, 0);
         if (token.phrase != Phrase.EVENT) {
+            System.out.println("phrase : " + token.phrase + " isn't event getting children");
             for (NodeToken token1 : token.childTokens) {
                 addNodeTokensToEvent(token1);
             }
@@ -54,8 +57,14 @@ public class EventAdder {
         }
         System.out.println("identifier is : " + identifierToken.relatedString);
     }
-    public static Map<String, Object> createEventArguments(Event event) {
+    public static Pair<Map<String, Object>, Map<String, Memo>> createEventArguments(Event event) {
         Map<String, Object> hashMap = new HashMap<>();
+        Map<String, Memo> functionDoMap = new HashMap<>();
+        functionDoMap.put("setCanceled", new Memo((u) -> {
+            List objects = (List) u;
+            event.setCanceled((Boolean) objects.get(0));
+            return null;
+        }));
         if(event instanceof EntityEvent) {
             hashMap.put("Entity", ((EntityEvent)event).getEntity());
             if(event instanceof EntityJoinWorldEvent) {
@@ -94,7 +103,7 @@ public class EventAdder {
                 hashMap.put("ExpToDrop", ((BlockEvent.BreakEvent)event).getExpToDrop());
             }
         }
-        return hashMap;
+        return Pair.of(hashMap, functionDoMap);
     }
     public static Map<String, Object> addVariableToEventFuncArguments(Map<String, Object> hashMap, Set<NightscriptEventArgument> arguments) {
         Map<String, Object> nightscriptArgumentMap = new HashMap<>();
@@ -106,11 +115,14 @@ public class EventAdder {
         return nightscriptArgumentMap;
     }
     public static void checkAndRunAllFunctions(Event event, Set<NightscriptEvent> nightscriptEvents) {
-        Map<String, Object> eventArguments = EventAdder.createEventArguments(event);
+        Pair<Map<String, Object>, Map<String, Memo>> myPair = EventAdder.createEventArguments(event);
+        Map<String, Object> eventArguments = myPair.first;
+        Map<String, Memo> eventFunctions = myPair.second;
         for(NightscriptEvent nightscriptEvent : nightscriptEvents) {
             Map<String, Object> eventVariableArgs = EventAdder.addVariableToEventFuncArguments(eventArguments, nightscriptEvent.eventArguments);
             for(NightscriptFunction function : nightscriptEvent.nightscriptFunctions) {
-                function.runFunction(eventVariableArgs);
+                System.out.println("running : " + function.functionIdentifier);
+                function.getLazyFunction(eventVariableArgs, eventFunctions).evaluate();
             }
         }
     }

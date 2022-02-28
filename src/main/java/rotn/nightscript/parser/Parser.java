@@ -100,6 +100,11 @@ public class Parser {
                 phraseGroup.add(variable);
                 phraseGroups.add(phraseGroup);
             }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(event_lambda);
+                phraseGroups.add(phraseGroup);
+            }
             phraseCombos.add(myPair);
         }
 
@@ -121,15 +126,56 @@ public class Parser {
             phraseCombos.add(myPair);
         }
 
-
         {
             Pair<Phrase, ArrayList<ArrayList<Phrase>>> myPair = Pair.of(FUNCTION, new ArrayList<>());
+            ArrayList<ArrayList<Phrase>> phraseGroups = myPair.second;
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(NORMAL_FUNCTION);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(EVENT_LAMBDA_FUNCTION);
+                phraseGroups.add(phraseGroup);
+            }
+            phraseCombos.add(myPair);
+        }
+        {
+            Pair<Phrase, ArrayList<ArrayList<Phrase>>> myPair = Pair.of(NORMAL_FUNCTION, new ArrayList<>());
             ArrayList<ArrayList<Phrase>> phraseGroups = myPair.second;
             {
                 ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
                 phraseGroup.add(identifier);
                 phraseGroup.add(left_paren);
                 phraseGroup.add(ARGS);
+                phraseGroup.add(right_paren);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(event_lambda);
+                phraseGroup.add(left_paren);
+                phraseGroup.add(right_paren);
+                phraseGroups.add(phraseGroup);
+            }
+            phraseCombos.add(myPair);
+        }
+        {
+            Pair<Phrase, ArrayList<ArrayList<Phrase>>> myPair = Pair.of(EVENT_LAMBDA_FUNCTION, new ArrayList<>());
+            ArrayList<ArrayList<Phrase>> phraseGroups = myPair.second;
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(event_lambda);
+                phraseGroup.add(left_paren);
+                phraseGroup.add(ARGS);
+                phraseGroup.add(right_paren);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(event_lambda);
+                phraseGroup.add(left_paren);
                 phraseGroup.add(right_paren);
                 phraseGroups.add(phraseGroup);
             }
@@ -162,7 +208,7 @@ public class Parser {
             }
             {
                 ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
-                phraseGroup.add(number);
+                phraseGroup.add(integer);
                 phraseGroups.add(phraseGroup);
             }
             {
@@ -245,7 +291,7 @@ public class Parser {
                         break;
                         //return State.SHIFT;
                     } else {
-                        System.out.println("    didn't match : " + phraseGroup);
+                        System.out.println("    for shifting didn't match : " + phraseGroup);
                     }
                 }
             }
@@ -254,6 +300,7 @@ public class Parser {
         for (Pair<Phrase, ArrayList<ArrayList<Phrase>>> phraseCombo : phraseCombos) {
             for(ArrayList<Phrase> phraseGroup : phraseCombo.second) {
                 if(matchesPhraseWithoutToken(stack, phraseGroup)) {
+                    System.out.println("reducing matched for : " + phraseGroup);
                     if(longestMatchingPhrase == null) {
                         longestMatchingPhrase = phraseGroup;
                         phraseToTurnInto = phraseCombo.first;
@@ -265,6 +312,8 @@ public class Parser {
                             phraseToTurnInto = phraseCombo.first;
                         }
                     }
+                } else {
+                    System.out.println("       for reducing didn't match : " + phraseGroup);
                 }
             }
         }

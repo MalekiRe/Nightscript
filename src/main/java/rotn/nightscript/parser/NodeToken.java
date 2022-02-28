@@ -21,17 +21,20 @@ public class NodeToken {
     public Phrase getParserEnumEquiv(LexerToken token) {
         switch (token) {
             case WHEN_KEYWORD: return Phrase.when_keyword;
-            case NUMBER: return Phrase.number;
+            case INTEGER: return Phrase.integer;
             case LEFT_CURLY_BRACKET: return Phrase.left_curly_bracket;
             case RIGHT_CURLY_BRACKET: return Phrase.right_curly_bracket;
             case IDENTIFIER: return Phrase.identifier;
             case LEFT_PAREN: return Phrase.left_paren;
             case RIGHT_PAREN: return Phrase.right_paren;
             case COMMA: return Phrase.comma;
+            case EVENT_LAMBDA: return Phrase.event_lambda;
             case SEMICOLON: return Phrase.semicolon;
             case COLON: return Phrase.colon;
             case STRING: return Phrase.string;
             case VARIABLE: return Phrase.variable;
+            case FLOAT: return Phrase.float_var;
+            case DOUBLE: return Phrase.double_var;
             case LEFT_SQUARE_BRACKET: return Phrase.left_square_bracket;
             case RIGHT_SQUARE_BRACKET: return Phrase.right_square_bracket;
             case END_OF_FILE: return Phrase.END_OF_FILE;
