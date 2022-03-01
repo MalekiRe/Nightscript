@@ -11,18 +11,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import rotn.nightscript.event_adder.MainEventsClass;
-import rotn.nightscript.events.BlockEvents;
-import rotn.nightscript.events.LivingEvents;
-import rotn.nightscript.events.MiscEvents;
-import rotn.nightscript.events.TickEvents;
-import rotn.nightscript.functionalstuff.FuncArgPair;
-import rotn.nightscript.functionalstuff.Lazy;
-import rotn.nightscript.functionalstuff.Memo;
+import rotn.nightscript.events.AllEvents;
 import rotn.nightscript.parser.NightscriptParser;
 
 import java.io.IOException;
-
-import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
 
 @Mod(
         modid = Nightscript.MOD_ID,
@@ -51,11 +43,6 @@ public class Nightscript {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Memo repeat = memoSet.get("repeat");
-        Memo print = memoSet.get("print");
-        Memo one = memoSet.get("1");
-        Memo addOne = memoSet.get("add");
-        new FuncArgPair(repeat, 10, new FuncArgPair(print, new FuncArgPair(addOne, 1.0, new FuncArgPair(addOne, 1.0, 3.0)))).evaluate();
     }
 
     /**
@@ -63,10 +50,7 @@ public class Nightscript {
      */
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        MinecraftForge.EVENT_BUS.register(BlockEvents.class);
-        MinecraftForge.EVENT_BUS.register(TickEvents.class);
-        MinecraftForge.EVENT_BUS.register(MiscEvents.class);
-        MinecraftForge.EVENT_BUS.register(LivingEvents.class);
+        MinecraftForge.EVENT_BUS.register(AllEvents.class);
     }
 
     /**

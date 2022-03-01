@@ -5,20 +5,19 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
-import rotn.nightscript.event_adder.FunctionDo;
 import rotn.nightscript.event_adder.NightscriptEvent;
 import rotn.nightscript.event_adder.NightscriptEventArgument;
 import rotn.nightscript.event_adder.NightscriptFunction;
-import rotn.nightscript.events.LivingEvents;
 import rotn.nightscript.functionalstuff.Memo;
+import rotn.nightscript.functionalstuff.NonMemo;
 import rotn.nightscript.parser.NodeToken;
 import rotn.nightscript.parser.Pair;
 import rotn.nightscript.parser.Phrase;
-import scala.tools.nsc.Global;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
-import static rotn.nightscript.events.TickEvents.*;
+import static rotn.nightscript.events.AllEvents.*;
 
 public class EventAdder {
     public static Set<NightscriptEvent> blockBreakEvents = new HashSet<>();
@@ -26,7 +25,7 @@ public class EventAdder {
     public static Set<NightscriptEvent> bonemealEvents = new HashSet<>();
     public static Set<NightscriptEvent> playerAttack = new HashSet<>();
 
-    public static Map<Class, Map<String, Object>> eventsToArgsMap = new HashMap<>();
+    public static Map<Class<? extends Event>, Map<String, Memo>> eventFunctionsMap = new HashMap<>();
 
     public static void addNodeTokensToEvent(NodeToken token) {
         NodeToken.printTree(token, 0);
@@ -44,27 +43,44 @@ public class EventAdder {
             }
             identifierToken = token.childTokens.get(i);
         }
-        switch (identifierToken.relatedString) {
-            case "BlockBreakEvent" : blockBreakEvents.add(new NightscriptEvent(token)); break;
-            case "playerInteractWithBlock" : playerInteractWithBlock.add(new NightscriptEvent(token)); break;
-            case "bonemeal" : bonemealEvents.add(new NightscriptEvent(token)); break;
-            case "playerAttack" : playerAttack.add(new NightscriptEvent(token)); break;
-            case "ServerTickEvent" : serverTickEvents.add(new NightscriptEvent(token)); break;
-            case "ClientTickEvent" : clientTickEvents.add(new NightscriptEvent(token)); break;
-            case "WorldTickEvent" : worldTickEvents.add(new NightscriptEvent(token)); break;
-            case "PlayerTickEvent" : playerTickEvents.add(new NightscriptEvent(token)); break;
-            case "RenderTickEvent" : renderTickEvents.add(new NightscriptEvent(token)); break;
+        if(!nightscriptEventsMap.containsKey(identifierToken.relatedString)) {
+            nightscriptEventsMap.put(identifierToken.relatedString, new HashSet<>());
         }
+        nightscriptEventsMap.get(identifierToken.relatedString).add(new NightscriptEvent(token));
         System.out.println("identifier is : " + identifierToken.relatedString);
+    }
+    public static Map<String, Memo> getEventFunctions(Event event) {
+        if(!eventFunctionsMap.containsKey(event.getClass())) {
+            System.out.println("doesn't contain event : " + event.getClass());
+            addEventFunctionsToMap(event);
+        }
+        return eventFunctionsMap.get(event.getClass());
+    }
+    public static void addEventFunctionsToMap(Event event) {
+        Map<String, Memo> myMap = new HashMap<>();
+        Class myClass = event.getClass();
+        while(myClass != Event.class) {
+            for(Method method : myClass.getDeclaredMethods()) {
+                if(method.getParameters().length == 0) {
+                    myMap.put(method.getName(), new Memo((event1, args) -> method.invoke(event1, ((Collection)args).toArray())));
+                } else {
+                    myMap.put(method.getName(), new NonMemo((event1, args) -> method.invoke(event1, ((Collection) args).toArray())));
+                }
+            }
+            myClass = myClass.getSuperclass();
+        }
+        for(Method method : myClass.getDeclaredMethods()) {
+            myMap.put(method.getName(), new NonMemo((event1, args) -> method.invoke(event1, ((Collection)args).toArray())));
+        }
+        eventFunctionsMap.put(event.getClass(), myMap);
     }
     public static Pair<Map<String, Object>, Map<String, Memo>> createEventArguments(Event event) {
         Map<String, Object> hashMap = new HashMap<>();
         Map<String, Memo> functionDoMap = new HashMap<>();
-        functionDoMap.put("setCanceled", new Memo((u) -> {
+        System.out.println(event.getClass().getDeclaredMethods());
+        functionDoMap.put("setCanceled", new Memo((event1, u) -> {
             List objects = (List) u;
-            event.setCanceled((Boolean) objects.get(0));
-            System.out.println("setting canceled");
-            System.out.println(((BlockEvent.BreakEvent)event));
+            event1.setCanceled((Boolean) objects.get(0));
             return null;
         }));
         if(event instanceof EntityEvent) {
@@ -116,15 +132,20 @@ public class EventAdder {
         }
         return nightscriptArgumentMap;
     }
-    public static void checkAndRunAllFunctions(Event event, Set<NightscriptEvent> nightscriptEvents) {
-        Pair<Map<String, Object>, Map<String, Memo>> myPair = EventAdder.createEventArguments(event);
-        Map<String, Object> eventArguments = myPair.first;
-        Map<String, Memo> eventFunctions = myPair.second;
-        for(NightscriptEvent nightscriptEvent : nightscriptEvents) {
-            Map<String, Object> eventVariableArgs = EventAdder.addVariableToEventFuncArguments(eventArguments, nightscriptEvent.eventArguments);
+    public static void checkAndRunAllFunctions(Event event) {
+        Map<String, Memo> eventFunctions = getEventFunctions(event);
+        if(!nightscriptEventsMap.containsKey(event.getClass().getSimpleName())) {
+            //This happens if we actually don't have anything declared for the event
+//            System.err.println("error trying to run based on an event that doesn't exist. Event is: " + event.getClass().getSimpleName());
+            return;
+        }
+        if(event instanceof BlockEvent.BreakEvent) {
+            System.out.println(event.getClass().getSimpleName());
+        }
+        for(NightscriptEvent nightscriptEvent : nightscriptEventsMap.get(event.getClass().getSimpleName())) {
             for(NightscriptFunction function : nightscriptEvent.nightscriptFunctions) {
                 System.out.println("running : " + function.functionIdentifier);
-                function.getLazyFunction(eventVariableArgs, eventFunctions).evaluate();
+                function.getLazyFunction(eventFunctions).evaluate(event);
             }
         }
     }

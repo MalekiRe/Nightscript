@@ -54,13 +54,15 @@ public class NightscriptFunction {
 //            }
 //        }
     }
-    public FuncArgPair getLazyFunction(Map<String, Object> eventFuncArgsMap, Map<String, Memo> eventFunctionsMap) {
-        List list = this.evaluateAndReturnAllFunctionArguments(eventFuncArgsMap, eventFunctionsMap);
-        System.out.println("func args for : " + functionIdentifier);
-        for(Object object : list) {
+    public FuncArgPair getLazyFunction(Map<String, Memo> eventFunctionsMap) {
+        List list = this.evaluateAndReturnAllFunctionArguments(eventFunctionsMap);
+        //System.out.println("func args for : " + functionIdentifier);
+        /*for(Object object : list) {
             System.out.println(object);
-        }
+        }*/
         if(this.functionType == FunctionType.EVENT_LAMBDA_FUNCTION) {
+            //System.out.println("is lambda type");
+            //System.out.println("gotten is : " + eventFunctionsMap.get(this.functionIdentifier) + " from : " + this.functionIdentifier);
             return new FuncArgPair(eventFunctionsMap.get(this.functionIdentifier), (list).toArray());
         } else {
             return new FuncArgPair(this.lazyEvaluationFunction, (list).toArray());
@@ -104,18 +106,18 @@ public class NightscriptFunction {
 
     //}
 
-    public ArrayList<Object> evaluateAndReturnAllFunctionArguments(Map<String, Object> eventFuncArgsMap, Map<String, Memo> eventFunctionsMap) {
+    public ArrayList<Object> evaluateAndReturnAllFunctionArguments(Map<String, Memo> eventFunctionsMap) {
         ArrayList<Object> returnList = new ArrayList<>();
         for(NightscriptFunctionArgument functionArgument : this.functionArguments) {
             switch (functionArgument.argumentType) {
-                case IDENTIFIER: returnList.add(eventFuncArgsMap.get(functionArgument.variableIdentifier)); break;
+//                case IDENTIFIER: returnList.add(eventFuncArgsMap.get(functionArgument.variableIdentifier)); break;
                 case STRING: returnList.add(functionArgument.stringVariable); break;
                 case INT: returnList.add(functionArgument.variableInteger); break;
                 case DOUBLE: returnList.add(functionArgument.variableDouble); break;
                 case FLOAT: returnList.add(functionArgument.variableFloat); break;
                 case BOOL: returnList.add(functionArgument.variableBoolean); break;
                 case FUNCTION: {
-                    returnList.add(functionArgument.function.getLazyFunction(eventFuncArgsMap, eventFunctionsMap));
+                    returnList.add(functionArgument.function.getLazyFunction(eventFunctionsMap));
                 }
             }
         }

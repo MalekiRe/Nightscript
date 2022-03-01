@@ -1,5 +1,8 @@
 package rotn.nightscript.functionalstuff;
 
+import net.minecraftforge.fml.common.eventhandler.Event;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,11 +14,12 @@ public class Memo<T, U> implements Lazy<T, U> {
         this.lazy = lazy;
     }
 
-    public T eval(U u) {
+    @Override
+    public T eval(Event event, U u) throws InvocationTargetException, IllegalAccessException {
         if(rememberMeMap.containsKey(u)) {
             return rememberMeMap.get(u);
         } else {
-            memo = lazy.eval(u);
+            memo = lazy.eval(event, u);
             rememberMeMap.put(u, memo);
             return memo;
         }

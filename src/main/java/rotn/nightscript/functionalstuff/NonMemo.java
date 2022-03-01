@@ -1,5 +1,9 @@
 package rotn.nightscript.functionalstuff;
 
+import net.minecraftforge.fml.common.eventhandler.Event;
+
+import java.lang.reflect.InvocationTargetException;
+
 public class NonMemo<T, U> extends Memo<T, U> {
     private Lazy<T, U> lazy;  // a lazy expression, eval sets it to null
 
@@ -9,7 +13,14 @@ public class NonMemo<T, U> extends Memo<T, U> {
     }
 
     @Override
-    public T eval(U u) {
-        return lazy.eval(u);
+    public T eval(Event event, U u) {
+        try {
+            return lazy.eval(event, u);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
