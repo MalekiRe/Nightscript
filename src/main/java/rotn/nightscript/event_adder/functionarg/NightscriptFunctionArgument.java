@@ -11,6 +11,7 @@ public class NightscriptFunctionArgument {
     public int variableInteger = 0;
     public float variableFloat = 0f;
     public double variableDouble = 0.0;
+    public boolean variableBoolean = false;
     public String eventLambdaIdentifier = null;
     public ArgumentType argumentType;
     public NightscriptFunctionArgument(NightscriptFunction nightscriptFunction) {
@@ -24,6 +25,7 @@ public class NightscriptFunctionArgument {
             case string: this.stringVariable = variableToken.relatedString; this.argumentType = ArgumentType.STRING; return;
             case double_var: this.variableDouble = Double.parseDouble(variableToken.relatedString); this.argumentType = ArgumentType.DOUBLE; return;
             case float_var: this.variableFloat = Float.parseFloat(variableToken.relatedString); this.argumentType = ArgumentType.FLOAT; return;
+            case bool: this.variableBoolean = Boolean.parseBoolean(variableToken.relatedString); this.argumentType = ArgumentType.BOOL; return;
             //case event_lambda: this.eventLambdaIdentifier = variableToken.relatedString.replace("#", ""); this.argumentType = ArgumentType.EVENT_LAMBDA; return;
         }
         System.err.println("error is not a variable number or string but is supposed to be : " + variableToken.phrase);
@@ -39,6 +41,7 @@ public class NightscriptFunctionArgument {
             //case EVENT_LAMBDA: return "event lambda: " + eventLambdaIdentifier;
             case FLOAT: return "float: " + variableFloat;
             case DOUBLE: return "double: " + variableDouble;
+            case BOOL: return "bool: " + variableBoolean;
         }
         System.out.println("argument type is : " + argumentType);
         System.exit(-1);

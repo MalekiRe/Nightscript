@@ -35,6 +35,7 @@ public class NodeToken {
             case VARIABLE: return Phrase.variable;
             case FLOAT: return Phrase.float_var;
             case DOUBLE: return Phrase.double_var;
+            case BOOL: return Phrase.bool;
             case LEFT_SQUARE_BRACKET: return Phrase.left_square_bracket;
             case RIGHT_SQUARE_BRACKET: return Phrase.right_square_bracket;
             case END_OF_FILE: return Phrase.END_OF_FILE;

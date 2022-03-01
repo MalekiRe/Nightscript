@@ -169,7 +169,13 @@ public class NightscriptParser {
                     break;
                 }
             }
-            NodeToken returnToken = new NodeToken(IDENTIFIER, s.s.substring(0, length+1));
+            String subString = s.s.substring(0, length+1);
+            if(subString.equals("true") || subString.equals("false")) {
+                NodeToken returnToken = new NodeToken(BOOL, subString);
+                s.s = s.s.substring(length+1);
+                return returnToken;
+            }
+            NodeToken returnToken = new NodeToken(IDENTIFIER, subString);
             s.s = s.s.substring(length+1);
             return returnToken;
         }

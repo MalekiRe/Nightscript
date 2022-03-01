@@ -15,6 +15,7 @@ public enum LexerToken {
     FLOAT,
     DOUBLE,
     STRING,
+    BOOL,
     VARIABLE,
     LEFT_SQUARE_BRACKET,
     RIGHT_SQUARE_BRACKET,

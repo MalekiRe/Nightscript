@@ -63,6 +63,8 @@ public class EventAdder {
         functionDoMap.put("setCanceled", new Memo((u) -> {
             List objects = (List) u;
             event.setCanceled((Boolean) objects.get(0));
+            System.out.println("setting canceled");
+            System.out.println(((BlockEvent.BreakEvent)event));
             return null;
         }));
         if(event instanceof EntityEvent) {

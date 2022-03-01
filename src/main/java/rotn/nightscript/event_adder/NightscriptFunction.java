@@ -113,6 +113,7 @@ public class NightscriptFunction {
                 case INT: returnList.add(functionArgument.variableInteger); break;
                 case DOUBLE: returnList.add(functionArgument.variableDouble); break;
                 case FLOAT: returnList.add(functionArgument.variableFloat); break;
+                case BOOL: returnList.add(functionArgument.variableBoolean); break;
                 case FUNCTION: {
                     returnList.add(functionArgument.function.getLazyFunction(eventFuncArgsMap, eventFunctionsMap));
                 }

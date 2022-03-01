@@ -218,6 +218,21 @@ public class Parser {
             }
             {
                 ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(float_var);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(double_var);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
+                phraseGroup.add(bool);
+                phraseGroups.add(phraseGroup);
+            }
+            {
+                ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
                 phraseGroup.add(variable);
                 phraseGroups.add(phraseGroup);
             }

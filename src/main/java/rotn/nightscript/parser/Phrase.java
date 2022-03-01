@@ -16,6 +16,7 @@ public enum Phrase {
     event_lambda,
     string,
     variable, //::$somealphanumeric thing
+    bool,
     left_square_bracket,
     right_square_bracket,
 

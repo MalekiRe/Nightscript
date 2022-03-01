@@ -7,6 +7,7 @@ public enum ArgumentType {
     DOUBLE,
     IDENTIFIER,
     FUNCTION,
+    BOOL,
     EVENT_LAMBDA,
 
     GENERAL,
