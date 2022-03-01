@@ -254,6 +254,7 @@ public class Parser {
         }
         return nodeTokens.get(iterator-1);
     }
+    public static StringHolder stringHolder;
     public static NodeToken doParsing() {
         System.out.println(phraseCombos);
         State currState = State.SHIFT;
@@ -264,7 +265,7 @@ public class Parser {
                 System.out.println(stack);
                 System.out.println(lookAheadToken);
                 System.err.println("encountered error while parsing, something has gone horribly wrong");
-                System.exit(-1);
+                return null;
             }
             if(currState == State.SHIFT) {
                 if(lookAheadToken != END_OF_FILE_TOKEN) {

@@ -27,6 +27,7 @@ public class EventAdder {
 
     public static Map<Class<? extends Event>, Map<String, Memo>> eventFunctionsMap = new HashMap<>();
 
+
     public static void addNodeTokensToEvent(NodeToken token) {
         NodeToken.printTree(token, 0);
         if (token.phrase != Phrase.EVENT) {
@@ -74,73 +75,11 @@ public class EventAdder {
         }
         eventFunctionsMap.put(event.getClass(), myMap);
     }
-    public static Pair<Map<String, Object>, Map<String, Memo>> createEventArguments(Event event) {
-        Map<String, Object> hashMap = new HashMap<>();
-        Map<String, Memo> functionDoMap = new HashMap<>();
-        System.out.println(event.getClass().getDeclaredMethods());
-        functionDoMap.put("setCanceled", new Memo((event1, u) -> {
-            List objects = (List) u;
-            event1.setCanceled((Boolean) objects.get(0));
-            return null;
-        }));
-        if(event instanceof EntityEvent) {
-            hashMap.put("Entity", ((EntityEvent)event).getEntity());
-            if(event instanceof EntityJoinWorldEvent) {
-                hashMap.put("World", ((EntityJoinWorldEvent)event).getWorld());
-            }
-            if(event instanceof LivingEvent) {
-                if(event instanceof LivingAttackEvent) {
-                    hashMap.put("DamageSource", ((LivingAttackEvent)event).getSource());
-                    hashMap.put("Amount", ((LivingAttackEvent)event).getAmount());
-                }
-                if(event instanceof LivingDeathEvent) {
-                    hashMap.put("Source", ((LivingDeathEvent)event).getSource());
-                }
-                if(event instanceof LivingFallEvent) {
-                    hashMap.put("Distance", ((LivingFallEvent)event).getDistance());
-                    hashMap.put("DamageMultiplier", ((LivingFallEvent)event).getDamageMultiplier());
-                }
-                if(event instanceof LivingDropsEvent) {
-                    hashMap.put("DamageSource", ((LivingDropsEvent)event).getSource());
-                    hashMap.put("Drops", ((LivingDropsEvent)event).getDrops());
-                    hashMap.put("LootingLevel", ((LivingDropsEvent)event).getLootingLevel());
-                    hashMap.put("IsRecentlyHit", ((LivingDropsEvent)event).isRecentlyHit());
-                }
-                if(event instanceof LivingHurtEvent) {
-                    hashMap.put("DamageSource", ((LivingHurtEvent)event).getSource());
-                    hashMap.put("Amount", ((LivingHurtEvent)event).getAmount());
-                }
-            }
-        }
-        if(event instanceof BlockEvent) {
-            hashMap.put("World", ((BlockEvent)event).getWorld());
-            hashMap.put("State", ((BlockEvent)event).getState());
-            hashMap.put("Position", ((BlockEvent)event).getPos());
-            if(event instanceof BlockEvent.BreakEvent) {
-                hashMap.put("Player", ((BlockEvent.BreakEvent)event).getPlayer());
-                hashMap.put("ExpToDrop", ((BlockEvent.BreakEvent)event).getExpToDrop());
-            }
-        }
-        return Pair.of(hashMap, functionDoMap);
-    }
-    public static Map<String, Object> addVariableToEventFuncArguments(Map<String, Object> hashMap, Set<NightscriptEventArgument> arguments) {
-        Map<String, Object> nightscriptArgumentMap = new HashMap<>();
-        for(NightscriptEventArgument nightscriptEventArgument : arguments) {
-            if(hashMap.containsKey(nightscriptEventArgument.classType)) {
-                nightscriptArgumentMap.put(nightscriptEventArgument.variableIdentifier, hashMap.get(nightscriptEventArgument.classType));
-            }
-        }
-        return nightscriptArgumentMap;
-    }
     public static void checkAndRunAllFunctions(Event event) {
         Map<String, Memo> eventFunctions = getEventFunctions(event);
         if(!nightscriptEventsMap.containsKey(event.getClass().getSimpleName())) {
             //This happens if we actually don't have anything declared for the event
-//            System.err.println("error trying to run based on an event that doesn't exist. Event is: " + event.getClass().getSimpleName());
             return;
-        }
-        if(event instanceof BlockEvent.BreakEvent) {
-            System.out.println(event.getClass().getSimpleName());
         }
         for(NightscriptEvent nightscriptEvent : nightscriptEventsMap.get(event.getClass().getSimpleName())) {
             for(NightscriptFunction function : nightscriptEvent.nightscriptFunctions) {

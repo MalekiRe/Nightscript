@@ -1,15 +1,20 @@
 package rotn.nightscript;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.command.ICommandManager;
+import net.minecraft.command.ServerCommandManager;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import rotn.nightscript.commands.TestCommand;
 import rotn.nightscript.event_adder.MainEventsClass;
 import rotn.nightscript.events.AllEvents;
 import rotn.nightscript.parser.NightscriptParser;
@@ -38,11 +43,15 @@ public class Nightscript {
      */
     @Mod.EventHandler
     public void preinit(FMLPreInitializationEvent event) {
-        try {
-            NightscriptParser.doNightscriptParsingAndSetup();
-        } catch (IOException e) {
-            e.printStackTrace();
+        String errorFile = NightscriptParser.doNightscriptParsingAndSetup();
+        if(!errorFile.equals("none")) {
+            System.err.println("error unable to load Nightscript file : " + errorFile);
         }
+    }
+
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new TestCommand());
     }
 
     /**

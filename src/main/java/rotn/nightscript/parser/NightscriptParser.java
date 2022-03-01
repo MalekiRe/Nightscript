@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Scanner;
 
 import static rotn.nightscript.parser.LexerToken.*;
+import static rotn.nightscript.parser.Parser.stringHolder;
 
 public class NightscriptParser {
     ArrayList<LexerToken> lexerTokens = new ArrayList<>();
@@ -18,7 +19,7 @@ public class NightscriptParser {
         return file;
     }
 
-    public static void doNightscriptParsingAndSetup() throws IOException {
+    public static String doNightscriptParsingAndSetup() {
         nightscriptFolder = new File(Loader.instance().getConfigDir().toPath().getParent().toFile(), "nightscript");
         createFileWithDir(nightscriptFolder);
         for(File file : nightscriptFolder.listFiles()) {
@@ -39,7 +40,16 @@ public class NightscriptParser {
             File eventFile = createFileWithDir(new File(file, "events"));
 
             for(File file1 : Objects.requireNonNull(eventFile.listFiles((file2, s) -> s.endsWith(".nts")))) {
-                EventAdder.addNodeTokensToEvent(parseNightscriptFile(file1));
+                try {
+                    StringHolder stringHolder = new StringHolder();
+                    stringHolder.s = "none";
+                    EventAdder.addNodeTokensToEvent(parseNightscriptFile(file1, stringHolder));
+                    if(!stringHolder.s.equals("none")) {
+                        return stringHolder.s;
+                    }
+                } catch (IOException e) {
+                    return file1.getAbsolutePath();
+                }
             }
 
             File resourceFile = createFileWithDir(new File(file, "resources"));
@@ -57,10 +67,13 @@ public class NightscriptParser {
                 createFileWithDir(new File(itemFile, "misc"));
             }
         }
-
+        return "none";
     }
-
-    public static NodeToken parseNightscriptFile(File file) throws IOException {
+    static StringHolder errorFile;
+    static File file;
+    public static NodeToken parseNightscriptFile(File file, StringHolder errorFile) throws IOException {
+        NightscriptParser.errorFile = errorFile;
+        NightscriptParser.file = file;
         ArrayList<NodeToken> nodeTokens = new ArrayList<>();
         File text = file;
         Scanner scnr = null;
@@ -81,11 +94,19 @@ public class NightscriptParser {
         while ((stringHolder.s = br.readLine()) != null) {
             while (stringHolder.s.length() != 0) {
                 nodeTokens.add(getNextLexerToken(stringHolder));
+                if(!errorFile.s.equals("none")) {
+                    throw new IOException();
+                }
                 //System.out.println("saved string is : " + nodeTokens.get(nodeTokens.size() - 1));
             }
         }
         for(NodeToken nodeToken : nodeTokens) {
             System.out.println("[" + nodeToken.phrase + ":" + nodeToken.relatedString + "]");
+        }
+        NodeToken token = Parser.Parse(nodeTokens);
+        if(token == null) {
+            stringHolder.s = file.getAbsolutePath();
+            throw new IOException();
         }
         return Parser.Parse(nodeTokens);
     }
@@ -203,7 +224,7 @@ public class NightscriptParser {
             s.s = s.s.substring(length+1);
             return returnToken;
         }
-        System.out.println("AAAA it is : " + s.s);
-        throw new RuntimeException();
+        errorFile.s = file.getAbsolutePath();
+        return new NodeToken(END_OF_FILE);
     }
 }

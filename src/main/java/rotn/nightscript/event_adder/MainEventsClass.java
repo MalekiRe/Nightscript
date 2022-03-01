@@ -9,6 +9,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistrySimple;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import rotn.nightscript.event_adder.functionarg.ArgumentType;
 
@@ -34,49 +35,67 @@ public class MainEventsClass {
 //
 //        actionFunctionSet.add(new ActionFunction("repeat", MainEventsClass::repeatFunction, INT, FUNCTION));
 //        actionFunctionSet.add(new ActionFunction("print", MainEventsClass::printFunction, STRING));
-
-        memoSet.put("1", new Memo((event, u) -> {
-            return 1;
-        }));
-        memoSet.put("add", new Memo((event, u) -> {
+        memoSet.put("addInt", new Memo((event, u) -> {
             List<Object> objects = (List<Object>) u;
-            double first = 0;
-            double second = 0;
-            if (objects.get(0) instanceof FuncArgPair) {
-                first = (double) ((FuncArgPair) objects.get(0)).evaluate(event);
-            } else {
-                first = (double) objects.get(0);
-            }
-            if (objects.get(1) instanceof FuncArgPair) {
-                second = (double) ((FuncArgPair) objects.get(1)).evaluate(event);
-            } else {
-                second = (double) objects.get(1);
-            }
+            int first = (int) evaluateOrGetThing(objects.get(0), event);
+            int second = (int) evaluateOrGetThing(objects.get(1), event);
+            return first+second;
+        }));
+        memoSet.put("addDouble", new Memo((event, u) -> {
+            List<Object> objects = (List<Object>) u;
+            double first = (double) evaluateOrGetThing(objects.get(0), event);
+            double second = (double) evaluateOrGetThing(objects.get(1), event);
+            return first+second;
+        }));
+        memoSet.put("addFloat", new Memo((event, u) -> {
+            List<Object> objects = (List<Object>) u;
+            float first = (float) evaluateOrGetThing(objects.get(0), event);
+            float second = (float) evaluateOrGetThing(objects.get(1), event);
+            return first+second;
+        }));
+        memoSet.put("addStrings", new Memo((event, u) -> {
+            List<Object> objects = (List<Object>) u;
+            String first = (String) evaluateOrGetThing(objects.get(0), event);
+            String second = (String) evaluateOrGetThing(objects.get(1), event);
             return first+second;
         }));
         memoSet.put("print", new NonMemo((event, u) -> {
             List objects = (List) u;
             for(Object object : objects) {
-                if (object instanceof FuncArgPair) {
-                    System.out.println("instance of FuncArgPair");
-                    System.out.println("I AM PRINTING : " + ((FuncArgPair) object).evaluate(event));
-                } else {
-                    System.out.println("I AM PRINTING : " + object);
-                }
+                System.out.println("nightscript is printing : " + evaluateOrGetThing(object, event));
             }
             return null;
         }));
         memoSet.put("repeat", new NonMemo((event, u) -> {
-            System.out.println(u);
             List objects = (List) u;
-            System.out.println("repeat args is : ");
-            System.out.println(objects);
             for(int i = 0; i < (Integer) objects.get(0); i++) {
                 ((FuncArgPair)objects.get(1)).evaluate(event);
             }
             return null;
         }));
+        memoSet.put("if", new Memo((event, args) -> {
+            List arguments = (List) args;
+            if((boolean) evaluateOrGetThing(arguments.get(0), event)) {
+                for(int i = 1; i < arguments.size(); i++) {
+                    ((FuncArgPair)arguments.get(i)).evaluate(event);
+                }
+            }
+            return null;
+        }));
+        memoSet.put("equals", new Memo((event, args) -> {
+            List arguments = (List) args;
+            Object object1 = evaluateOrGetThing(arguments.get(0), event);
+            Object object2 = evaluateOrGetThing(arguments.get(1), event);
+            return object1.equals(object2);
+        }));
 
+    }
+
+    static Object evaluateOrGetThing(Object object, Event event) {
+        if(object instanceof FuncArgPair) {
+            return ((FuncArgPair)object).evaluate(event);
+        }
+        return object;
     }
 
 }
