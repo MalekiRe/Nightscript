@@ -11,6 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistrySimple;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import rotn.nightscript.event_adder.functionarg.AnonFunc;
 import rotn.nightscript.event_adder.functionarg.ArgumentType;
 
 import rotn.nightscript.event_adder.functionarg.ArgumentType.*;
@@ -21,20 +22,16 @@ import rotn.nightscript.parser.Pair;
 import scala.Int;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static rotn.nightscript.event_adder.functionarg.ArgumentType.*;
 
 public class MainEventsClass {
     static Set<ActionFunction> actionFunctionSet = new HashSet<>();
     public static Map<String, Memo> memoSet = new HashMap<>();
+    public static Stack<Pair<Integer, AnonFunc>> functionStack = new Stack<>();
     static {
-//        actionFunctionSet.add(new ActionFunction("kill", MainEventsClass::killFunction, PlayerObject));
-//        actionFunctionSet.add(new ActionFunction("giveLiteral", MainEventsClass::giveLiteralFunc, PlayerObject, STRING));
-//        actionFunctionSet.add(new ActionFunction("giveLiteralInt", MainEventsClass::giveLiteralIntFunc, PlayerObject, STRING, INT));
-//
-//
-//        actionFunctionSet.add(new ActionFunction("repeat", MainEventsClass::repeatFunction, INT, FUNCTION));
-//        actionFunctionSet.add(new ActionFunction("print", MainEventsClass::printFunction, STRING));
         memoSet.put("addInt", new Memo((event, u) -> {
             List<Object> objects = (List<Object>) u;
             int first = (int) evaluateOrGetThing(objects.get(0), event);
@@ -88,7 +85,13 @@ public class MainEventsClass {
             Object object2 = evaluateOrGetThing(arguments.get(1), event);
             return object1.equals(object2);
         }));
-
+        memoSet.put("not", new Memo((event, args) -> ! (boolean) evaluateOrGetThing(((List)args).get(0), event)));
+        memoSet.put("delay", new NonMemo((event, args) -> {
+            functionStack.push(Pair.of((Integer) ((List)args).get(0), () -> {
+                ((FuncArgPair)((List)args).get(1)).evaluate(event);
+            }));
+            return null;
+        }));
     }
 
     static Object evaluateOrGetThing(Object object, Event event) {
