@@ -81,7 +81,7 @@ public class Parser {
                 ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
                 phraseGroup.add(EVENT_ARG);
                 phraseGroup.add(comma);
-                phraseGroup.add(EVENT_ARG);
+                phraseGroup.add(EVENT_ARGS);
                 phraseGroups.add(phraseGroup);
             }
             {
@@ -154,7 +154,7 @@ public class Parser {
             }
             {
                 ArrayList<Phrase> phraseGroup = new ArrayList<Phrase>();
-                phraseGroup.add(event_lambda);
+                phraseGroup.add(identifier);
                 phraseGroup.add(left_paren);
                 phraseGroup.add(right_paren);
                 phraseGroups.add(phraseGroup);

@@ -124,6 +124,7 @@ public class NightscriptParser {
             case '[' : lexerToken = LEFT_SQUARE_BRACKET; break;
             case ']' : lexerToken = RIGHT_SQUARE_BRACKET; break;
             case ' ' : lexerToken = SPACE; break;
+            case '\t' : lexerToken = SPACE; break;
             default:
         }
         if(lexerToken != null) {
@@ -221,6 +222,18 @@ public class NightscriptParser {
                 }
             }
             NodeToken returnToken = new NodeToken(EVENT_LAMBDA, s.s.substring(0, length+1));
+            s.s = s.s.substring(length+1);
+            return returnToken;
+        }
+        if(s.s.charAt(0) == '@') {
+            int length = 0;
+            for(int i = 1; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.'; i++) {
+                length = i;
+                if(s.s.length() == i+1) {
+                    break;
+                }
+            }
+            NodeToken returnToken = new NodeToken(IDENTIFIER, s.s.substring(0, length+1));
             s.s = s.s.substring(length+1);
             return returnToken;
         }

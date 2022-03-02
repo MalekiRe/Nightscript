@@ -3,13 +3,16 @@ package rotn.nightscript.event_adder;
 import rotn.nightscript.event_adder.functionarg.NightscriptFunctionArgument;
 import rotn.nightscript.functionalstuff.FuncArgPair;
 import rotn.nightscript.functionalstuff.Memo;
+import rotn.nightscript.functionalstuff.NonMemo;
 import rotn.nightscript.parser.NodeToken;
 import rotn.nightscript.parser.Pair;
 import rotn.nightscript.parser.Phrase;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.*;
 
-import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
+import static rotn.nightscript.event_adder.MainEventsClass.*;
 
 public class NightscriptFunction {
     public ArrayList<NightscriptFunctionArgument> functionArguments = new ArrayList<>();
@@ -21,18 +24,27 @@ public class NightscriptFunction {
         NORMAL_FUNCTION,
         EVENT_LAMBDA_FUNCTION
     }
+    boolean isBuiltInFunc = false;
     FunctionType functionType = null;
+    public Type returnType;
+    Set<Pair<Method, Memo>> matchingLengthArgsSet = new HashSet<>();
     public NightscriptFunction(NodeToken functionToken) {
         NodeToken.printTree(functionToken, 0);
+        System.out.println(functionToken.childTokens.get(0).phrase);
         if(functionToken.childTokens.get(0).phrase == Phrase.NORMAL_FUNCTION) {
+            System.out.println("is decided to be normal function");
             functionType = FunctionType.NORMAL_FUNCTION;
         } else {
+            System.out.println("is decided to be normal function");
             functionType = FunctionType.EVENT_LAMBDA_FUNCTION;
         }
         functionToken = functionToken.childTokens.get(0);
         for(NodeToken token : functionToken.childTokens) {
             if(token.phrase == Phrase.identifier) {
                 this.functionIdentifier = token.relatedString;
+                if(this.functionIdentifier.charAt(0) == '@') {
+                    this.isBuiltInFunc = true;
+                }
             }
             if(token.phrase == Phrase.event_lambda) {
                 this.functionIdentifier = token.relatedString.replace("#", "");
@@ -43,7 +55,13 @@ public class NightscriptFunction {
         }
         Collections.reverse(functionArguments);
         if(functionType == FunctionType.NORMAL_FUNCTION) {
-            this.lazyEvaluationFunction = memoSet.get(this.functionIdentifier);
+            if(!this.isBuiltInFunc) {
+                System.out.println("trying to get : " + this.functionIdentifier + " from memoset");
+                System.out.println("we got: " + memoSet.get(this.functionIdentifier));
+                this.lazyEvaluationFunction = memoSet.get(this.functionIdentifier);
+            } else {
+                //We delay until the event has gone through and added stuff to the set.
+            }
         }
 //        for(ActionFunction actionFunction1 : MainEventsClass.actionFunctionSet) {
 //            if(actionFunction1.actionFunctionName.equals(functionIdentifier)) {
@@ -65,7 +83,53 @@ public class NightscriptFunction {
             //System.out.println("gotten is : " + eventFunctionsMap.get(this.functionIdentifier) + " from : " + this.functionIdentifier);
             return new FuncArgPair(eventFunctionsMap.get(this.functionIdentifier), (list).toArray());
         } else {
-            return new FuncArgPair(this.lazyEvaluationFunction, (list).toArray());
+            //System.out.println("isn't lambda type");
+            //System.out.println("function is : " + this.lazyEvaluationFunction);
+            if(!isBuiltInFunc) {
+                return new FuncArgPair(this.lazyEvaluationFunction, (list).toArray());
+            } else {
+                if(matchingLengthArgsSet.size() == 0) {
+                    for (Pair<Method, Memo> temp : autoGenMethods.get(this.functionIdentifier).second) {
+                        //We have the minus one cause the first parameter is the variable upon which we invoke the function.
+                        //TODO::remember to make all this stuff work for static functions too.
+                        if (temp.first.getParameters().length == (functionArguments.size() - 1)) {
+                            matchingLengthArgsSet.add(temp);
+                        } else {
+                            System.out.println("temps params that don't match are : " + Arrays.toString(temp.first.getParameters()));
+                            System.out.println("our params that don't match are : " + functionArguments);
+                            System.out.println("temps size is : " + temp.first.getParameters().length);
+                            System.out.println("our size is : " + functionArguments.size());
+                        }
+                        System.out.println("   possible matching is : " + temp.first);
+                    }
+                }
+                ArrayList<List> listOfLists = new ArrayList<>();
+                return new FuncArgPair(new NonMemo((event, args) -> {
+                    List list1 = (List) evaluateOrGetThings(args, event);
+                    listOfLists.add(list1);
+                    for(Pair<Method, Memo> methodMemoPair : matchingLengthArgsSet) {
+                        boolean flag = false;
+                        for(int i = 0; i < methodMemoPair.first.getParameters().length; i++) {
+                            if(list1.size() == i+1) {
+                                flag = true;
+                                break;
+                            }
+                            if(!methodMemoPair.first.getParameterTypes()[i].isInstance(list1.get(i+1))) {
+                                System.out.println("paramater : " + methodMemoPair.first.getParameterTypes()[i] + " is not instance of : " + list1.get(i+1));
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if(flag) {
+                            continue;
+                        }
+                        return methodMemoPair.second.eval(event, list1);
+                    }
+                    System.err.println("Error in nightscript, tried but could not find a matching builtinFunction for " + matchingLengthArgsSet);
+                    return null;
+                }), list.toArray());
+
+            }
         }
     }
 //    public Object runFunction(Map<String, Object> eventFuncArgsMap, Map<String, Memo> eventFunctionsMap) {
@@ -111,7 +175,7 @@ public class NightscriptFunction {
         for(NightscriptFunctionArgument functionArgument : this.functionArguments) {
             switch (functionArgument.argumentType) {
 //                case IDENTIFIER: returnList.add(eventFuncArgsMap.get(functionArgument.variableIdentifier)); break;
-                case STRING: returnList.add(functionArgument.stringVariable); break;
+                case STRING: returnList.add(functionArgument.stringVariable.replace("\"", "")); break;
                 case INT: returnList.add(functionArgument.variableInteger); break;
                 case DOUBLE: returnList.add(functionArgument.variableDouble); break;
                 case FLOAT: returnList.add(functionArgument.variableFloat); break;

@@ -30,13 +30,19 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.oredict.OreDictionary;
+import rotn.nightscript.EventAdder;
 import rotn.nightscript.event_adder.NightscriptEvent;
+import rotn.nightscript.functionalstuff.Memo;
+import rotn.nightscript.parser.Pair;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import static rotn.nightscript.EventAdder.checkAndRunAllFunctions;
+import static rotn.nightscript.event_adder.MainEventsClass.autoGenMethods;
+import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
 
 @Mod.EventBusSubscriber
 public class AllEvents {
@@ -220,7 +226,19 @@ public class AllEvents {
     @SubscribeEvent
     public static void onEvent(AttackEntityEvent event) {checkAndRunAllFunctions(event);}
     @SubscribeEvent
-    public static void onEvent(BonemealEvent event) {checkAndRunAllFunctions(event);}
+    public static void onEvent(BonemealEvent event) {
+        checkAndRunAllFunctions(event);
+        //TODO:: remove this
+        for(String s : autoGenMethods.keySet()) {
+            System.out.println("memoset string : " + s);
+            System.out.println("this is for : " + autoGenMethods.get(s).first);
+            System.out.println(" which has the methods : ");
+            for(Pair<Method, Memo> temp : autoGenMethods.get(s).second) {
+                System.out.println("   " + temp.first);
+            }
+            System.out.println("");
+        }
+    }
     @SubscribeEvent
     public static void onEvent(PlayerInteractEvent.EntityInteract event) {checkAndRunAllFunctions(event);}
     @SubscribeEvent
@@ -292,7 +310,9 @@ public class AllEvents {
     @SubscribeEvent
     public static void onEvent(BlockEvent.HarvestDropsEvent event) {checkAndRunAllFunctions(event);}
     @SubscribeEvent
-    public static void onEvent(BlockEvent.BreakEvent event) {checkAndRunAllFunctions(event);}
+    public static void onEvent(BlockEvent.BreakEvent event) {
+        checkAndRunAllFunctions(event);
+    }
     @SubscribeEvent
     public static void onEvent(ChunkDataEvent.Load event) {checkAndRunAllFunctions(event);}
     @SubscribeEvent
