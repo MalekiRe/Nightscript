@@ -135,9 +135,9 @@ public class NightscriptParser {
             }
             return returnToken;
         }
-        if(s.s.startsWith("When")) {
+        if(s.s.startsWith("when")) {
             s.s = s.s.substring(4);
-            return new NodeToken(WHEN_KEYWORD, "When");
+            return new NodeToken(WHEN_KEYWORD, "when");
         }
         if(s.s.charAt(0) == '"') {
             int length = 0;
@@ -185,7 +185,7 @@ public class NightscriptParser {
         }
         if(Character.isAlphabetic(s.s.charAt(0))) {
             int length = 0;
-            for(int i = 0; Character.isLetterOrDigit(s.s.charAt(i)); i++) {
+            for(int i = 0; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.'; i++) {
                 length = i;
                 if(s.s.length() == i+1) {
                     break;

@@ -22,8 +22,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-import static rotn.nightscript.event_adder.MainEventsClass.autoGenMethods;
-import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
+import static rotn.nightscript.event_adder.MainEventsClass.*;
 import static rotn.nightscript.events.AllEvents.*;
 
 public class EventAdder {
@@ -68,15 +67,24 @@ public class EventAdder {
         if(!alreadyAddedMethods.contains(method)) {
             alreadyAddedMethods.add(method);
             if(!autoGenMethods.containsKey("@" + method.getReturnType().getSimpleName() + ".CREATE")) {
-                autoGenMethods.put("@" + method.getReturnType().getSimpleName() + ".CREATE", new HashSet<Pair<Method, Memo>>());
+                autoGenConstructors.put("@" + method.getReturnType().getSimpleName() + ".CREATE", new HashSet<Pair<Constructor, Memo>>());
             }
             for(Constructor constructor : method.getReturnType().getConstructors()) {
-                try {
+                autoGenConstructors.get("@" + method.getReturnType().getSimpleName() + ".CREATE").add(Pair.of(constructor, new Memo((event, args) -> {
+                    try {
+//                        for(Class s : constructor.getParameterTypes()) {
+//                            System.out.println("parameter types are : " +s);
+//                        }
+//                        for(Object o : (List)args) {
+//                            System.out.println("objects are : " + o);
+//                        }
+                        return constructor.newInstance(((List<?>) args).toArray());
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    }
+                    return null;//TODO add error here
+                })));
 
-                    autoGenMethods.put("@" + method.getReturnType().getSimpleName() + ".CREATE", Pair.of(constructor.getClass().getMethod("newInstance", Object[].class), new HashSet<>()));
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                }
             }
             for(Method method2 : method.getReturnType().getDeclaredMethods()) {
                 String adder = "";
@@ -123,15 +131,27 @@ public class EventAdder {
         }
         eventFunctionsMap.put(event.getClass(), myMap);
     }
+    public static String generateClassString(Class class1) {
+        String s = "";
+        if(class1.isMemberClass()) {
+            s += class1.getEnclosingClass().getSimpleName() + ".";
+        }
+        s += class1.getSimpleName();
+        return s;
+    }
+    static Map<Class< ? extends Event>, String> cache = new HashMap<>();
     public static void checkAndRunAllFunctions(Event event) {
         Map<String, Memo> eventFunctions = getEventFunctions(event);
-        if(!nightscriptEventsMap.containsKey(event.getClass().getSimpleName())) {
+        if(!cache.containsKey(event.getClass())) {
+            cache.put(event.getClass(), generateClassString(event.getClass()));
+        }
+        if(!nightscriptEventsMap.containsKey(cache.get(event.getClass()))) {
             //This happens if we actually don't have anything declared for the event
             return;
         }
-        for(NightscriptEvent nightscriptEvent : nightscriptEventsMap.get(event.getClass().getSimpleName())) {
+        for(NightscriptEvent nightscriptEvent : nightscriptEventsMap.get(cache.get(event.getClass()))) {
             for(NightscriptFunction function : nightscriptEvent.nightscriptFunctions) {
-                System.out.println("running : " + function.functionIdentifier);
+                //System.out.println("running : " + function.functionIdentifier);
                 function.getLazyFunction(eventFunctions).evaluate(event);
             }
         }
