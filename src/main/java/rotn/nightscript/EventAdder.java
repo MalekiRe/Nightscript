@@ -16,7 +16,10 @@ import rotn.nightscript.parser.Pair;
 import rotn.nightscript.parser.Phrase;
 import rotn.nightscript.parser.Triplet;
 
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static rotn.nightscript.event_adder.MainEventsClass.autoGenMethods;
@@ -31,7 +34,7 @@ public class EventAdder {
 
     public static Map<Class<? extends Event>, Map<String, Memo>> eventFunctionsMap = new HashMap<>();
     public static Map<Class, Map<String, Memo>> allMethodReturnTypeFunctions = new HashMap<>();
-    public static Set<Method> alreadyAddedMethods = new HashSet<>();
+    public static Set<Object> alreadyAddedMethods = new HashSet<>();
     public static void addNodeTokensToEvent(NodeToken token) {
         NodeToken.printTree(token, 0);
         if (token.phrase != Phrase.EVENT) {
@@ -61,6 +64,43 @@ public class EventAdder {
         }
         return eventFunctionsMap.get(event.getClass());
     }
+    public static void recursiveAdd(Method method) {
+        if(!alreadyAddedMethods.contains(method)) {
+            alreadyAddedMethods.add(method);
+            if(!autoGenMethods.containsKey("@" + method.getReturnType().getSimpleName() + ".CREATE")) {
+                autoGenMethods.put("@" + method.getReturnType().getSimpleName() + ".CREATE", new HashSet<Pair<Method, Memo>>());
+            }
+            for(Constructor constructor : method.getReturnType().getConstructors()) {
+                try {
+
+                    autoGenMethods.put("@" + method.getReturnType().getSimpleName() + ".CREATE", Pair.of(constructor.getClass().getMethod("newInstance", Object[].class), new HashSet<>()));
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                }
+            }
+            for(Method method2 : method.getReturnType().getDeclaredMethods()) {
+                String adder = "";
+                String savedName = "@"+adder+method.getReturnType().getSimpleName() + "." + method2.getName();
+                if(!autoGenMethods.containsKey(savedName)) {
+                    autoGenMethods.put(savedName, new Pair<>(method, new HashSet<>()));
+                }
+                Set<Pair<Method, Memo>> mySet = autoGenMethods.get(savedName).second;
+                boolean flag = false;
+                for(Pair<Method, Memo> setPair : mySet) {
+                    if(setPair.first.equals(method2)) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if(flag) continue;
+                mySet.add(Pair.of(method2, new NonMemo((event2, args) -> {
+                    List<Object> objects = MainEventsClass.evaluateOrGetThings(args, event2);
+                    return method2.invoke(objects.get(0), objects.subList(1, objects.size()).toArray());
+                })));
+                recursiveAdd(method2);
+            }
+        }
+    }
     public static void addEventFunctionsToMap(Event event) {
         Map<String, Memo> myMap = new HashMap<>();
         Class myClass = event.getClass();
@@ -71,30 +111,11 @@ public class EventAdder {
 //                } else {
                 myMap.put(method.getName(), new NonMemo((event1, args) -> method.invoke(event1, ((Collection) args).toArray())));
                 //Adding all data types to array
-                if(!alreadyAddedMethods.contains(method)) {
-                    alreadyAddedMethods.add(method);
-                    for(Method method2 : method.getReturnType().getDeclaredMethods()) {
-                        String savedName = "@"+method.getReturnType().getSimpleName() + "." + method2.getName();
-                        if(!autoGenMethods.containsKey(savedName)) {
-                            autoGenMethods.put(savedName, new Pair<>(method, new HashSet<>()));
-                        }
-                        Set<Pair<Method, Memo>> mySet = autoGenMethods.get(savedName).second;
-                        boolean flag = false;
-                        for(Pair<Method, Memo> setPair : mySet) {
-                            if(setPair.first.equals(method2)) {
-                                flag = true;
-                                break;
-                            }
-                        }
-                        if(flag) continue;
-                        mySet.add(Pair.of(method2, new NonMemo((event2, args) -> {
-                            List<Object> objects = MainEventsClass.evaluateOrGetThings(args, event2);
-                            return method2.invoke(objects.get(0), objects.subList(1, objects.size()).toArray());
-                        })));
-                    }
-                }
+                recursiveAdd(method);
+
                 //}
             }
+
             myClass = myClass.getSuperclass();
         }
         for(Method method : myClass.getDeclaredMethods()) {

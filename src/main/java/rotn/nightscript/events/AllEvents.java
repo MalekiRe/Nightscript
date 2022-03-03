@@ -35,10 +35,13 @@ import rotn.nightscript.event_adder.NightscriptEvent;
 import rotn.nightscript.functionalstuff.Memo;
 import rotn.nightscript.parser.Pair;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.util.*;
 
 import static rotn.nightscript.EventAdder.checkAndRunAllFunctions;
 import static rotn.nightscript.event_adder.MainEventsClass.autoGenMethods;
@@ -229,15 +232,50 @@ public class AllEvents {
     public static void onEvent(BonemealEvent event) {
         checkAndRunAllFunctions(event);
         //TODO:: remove this
-        for(String s : autoGenMethods.keySet()) {
-            System.out.println("memoset string : " + s);
-            System.out.println("this is for : " + autoGenMethods.get(s).first);
-            System.out.println(" which has the methods : ");
-            for(Pair<Method, Memo> temp : autoGenMethods.get(s).second) {
-                System.out.println("   " + temp.first);
-            }
-            System.out.println("");
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("the-file-name.txt", "UTF-8");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
+        for(String s : autoGenMethods.keySet()) {
+            writer.print(s + "(");
+            PrintWriter finalWriter = writer;
+            for (Iterator<Pair<Method, Memo>> iterator = autoGenMethods.get(s).second.iterator(); iterator.hasNext(); ) {
+                Pair<Method, Memo> myPair = iterator.next();
+                if (!Modifier.isStatic(myPair.first.getModifiers())) {
+                    finalWriter.print(s.substring(1, s.indexOf('.')));
+                    if (myPair.first.getParameters().length != 0) {
+                        finalWriter.print(", ");
+                    }
+                }
+                Parameter[] parameters = myPair.first.getParameters();
+                for (int i = 0; i < parameters.length; i++) {
+                    Parameter p = parameters[i];
+                    finalWriter.print(p.getType().getSimpleName());
+                    if (i + 1 < parameters.length) {
+                        finalWriter.print(", ");
+                    }
+                }
+                if (iterator.hasNext()) {
+                    finalWriter.print(" | ");
+                }
+            }
+            finalWriter.println(")");
+            //            System.out.println("memoset string : " + s);
+//            System.out.println("this is for : " + autoGenMethods.get(s).first);
+//            System.out.println(" which has the methods : ");
+//            for(Pair<Method, Memo> temp : autoGenMethods.get(s).second) {
+//                System.out.println("   " + temp.first);
+//            }
+//            System.out.println("");
+        }
+        for(String s : memoSet.keySet()) {
+            writer.print(s);
+        }
+        writer.close();
     }
     @SubscribeEvent
     public static void onEvent(PlayerInteractEvent.EntityInteract event) {checkAndRunAllFunctions(event);}

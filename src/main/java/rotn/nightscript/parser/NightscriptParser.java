@@ -39,7 +39,7 @@ public class NightscriptParser {
             }
             File eventFile = createFileWithDir(new File(file, "events"));
 
-            for(File file1 : Objects.requireNonNull(eventFile.listFiles((file2, s) -> s.endsWith(".nts")))) {
+            for(File file1 : Objects.requireNonNull(eventFile.listFiles((file2, s) -> s.endsWith(".nightscript")))) {
                 try {
                     StringHolder stringHolder = new StringHolder();
                     stringHolder.s = "none";

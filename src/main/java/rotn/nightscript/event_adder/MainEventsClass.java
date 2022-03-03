@@ -1,6 +1,6 @@
 package rotn.nightscript.event_adder;
 
-import com.sun.corba.se.impl.orbutil.graph.GraphImpl;
+
 import io.netty.util.internal.ConcurrentSet;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -26,6 +26,7 @@ import rotn.nightscript.parser.Pair;
 import rotn.nightscript.parser.Triplet;
 import scala.Int;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
@@ -37,6 +38,7 @@ public class MainEventsClass {
     static Set<ActionFunction> actionFunctionSet = new HashSet<>();
     public static Map<String, Memo> memoSet = new HashMap<>();
     public static Map<String, Pair<Method, HashSet<Pair<Method, Memo>>>> autoGenMethods = new HashMap<>();
+    public static Map<String, Pair<Method, HashSet<Pair<Constructor, Memo>>>> autoGenConstructors = new HashMap<>();
     public static Set<Pair<Integer, AnonFunc>> functionStack = new ConcurrentSet<>();
     static {
         memoSet.put("addInt", new Memo((event, u) -> {
