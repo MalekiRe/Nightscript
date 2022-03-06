@@ -10,4 +10,7 @@ public class Pair <T, Z>{
     public static <T, Z>Pair<T, Z> of(T t, Z z) {
         return new Pair<T, Z>(t, z);
     }
+    public String toString() {
+        return "[" + first + ", " + second + "]";
+    }
 }

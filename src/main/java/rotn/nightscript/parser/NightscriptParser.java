@@ -185,7 +185,7 @@ public class NightscriptParser {
         }
         if(Character.isAlphabetic(s.s.charAt(0))) {
             int length = 0;
-            for(int i = 0; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.'; i++) {
+            for(int i = 0; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.' || s.s.charAt(i) == '_'; i++) {
                 length = i;
                 if(s.s.length() == i+1) {
                     break;
@@ -227,7 +227,7 @@ public class NightscriptParser {
         }
         if(s.s.charAt(0) == '@') {
             int length = 0;
-            for(int i = 1; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.'; i++) {
+            for(int i = 1; Character.isLetterOrDigit(s.s.charAt(i)) || s.s.charAt(i) == '.' || s.s.charAt(i) == '_'; i++) {
                 length = i;
                 if(s.s.length() == i+1) {
                     break;
@@ -237,6 +237,7 @@ public class NightscriptParser {
             s.s = s.s.substring(length+1);
             return returnToken;
         }
+        System.err.println("error for tokens : " + s.s);
         errorFile.s = file.getAbsolutePath();
         return new NodeToken(END_OF_FILE);
     }

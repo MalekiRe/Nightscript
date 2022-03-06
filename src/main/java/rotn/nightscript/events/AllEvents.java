@@ -1,5 +1,6 @@
 package rotn.nightscript.events;
 
+import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundSourceEvent;
 import net.minecraftforge.client.event.sound.PlayStreamingSourceEvent;
@@ -24,11 +25,13 @@ import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.oredict.OreDictionary;
 import rotn.nightscript.EventAdder;
 import rotn.nightscript.event_adder.NightscriptEvent;
@@ -38,13 +41,10 @@ import rotn.nightscript.parser.Pair;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 
-import static rotn.nightscript.EventAdder.checkAndRunAllFunctions;
+import static rotn.nightscript.EventAdder.*;
 import static rotn.nightscript.event_adder.MainEventsClass.*;
 
 @Mod.EventBusSubscriber
@@ -231,80 +231,6 @@ public class AllEvents {
     @SubscribeEvent
     public static void onEvent(BonemealEvent event) {
         checkAndRunAllFunctions(event);
-        //TODO:: remove this
-//        PrintWriter writer = null;
-//        try {
-//            writer = new PrintWriter("the-file-name.txt", "UTF-8");
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
-//        for(String s : autoGenMethods.keySet()) {
-//            writer.print(s.substring(1) + "(");
-//            PrintWriter finalWriter = writer;
-//            for (Iterator<Pair<Method, Memo>> iterator = autoGenMethods.get(s).second.iterator(); iterator.hasNext(); ) {
-//                Pair<Method, Memo> myPair = iterator.next();
-//                if (!Modifier.isStatic(myPair.first.getModifiers())) {
-//                    finalWriter.print(s.substring(1, s.indexOf('.')));
-//                    if (myPair.first.getParameters().length != 0) {
-//                        finalWriter.print(", ");
-//                    }
-//                }
-//                Parameter[] parameters = myPair.first.getParameters();
-//                for (int i = 0; i < parameters.length; i++) {
-//                    Parameter p = parameters[i];
-//                    finalWriter.print(p.getType().getSimpleName());
-//                    if (i + 1 < parameters.length) {
-//                        finalWriter.print(", ");
-//                    }
-//                }
-//                if (iterator.hasNext()) {
-//                    finalWriter.print(" | ");
-//                }
-//            }
-//            finalWriter.println(")");
-//        }
-//        for(String s : autoGenConstructors.keySet()) {
-//            writer.print(s.substring(1) + "(");
-//            PrintWriter finalWriter = writer;
-//            for (Iterator<Pair<Constructor, Memo>> iterator = autoGenConstructors.get(s).iterator(); iterator.hasNext(); ) {
-//                Pair<Constructor, Memo> myPair = iterator.next();
-//                Class[] parameters = myPair.first.getParameterTypes();
-//                for (int i = 0; i < parameters.length; i++) {
-//                    Class p = parameters[i];
-//                    finalWriter.print(p.getSimpleName());
-//                    if (i + 1 < parameters.length) {
-//                        finalWriter.print(", ");
-//                    }
-//                }
-//                if (iterator.hasNext()) {
-//                    finalWriter.print(" | ");
-//                }
-//            }
-//            finalWriter.println(")");
-//        }
-//        for(String s : memoSet.keySet()) {
-//            writer.print(s);
-//        }
-//        for(String s : memoSet.keySet()) {
-//            writer.print(s + "(");
-//            for (Iterator<Class> iterator = Arrays.stream(memoSet.get(s).first).iterator(); iterator.hasNext(); ) {
-//                Class p = iterator.next();
-//
-//                writer.print(p.getSimpleName());
-//                    if (iterator.hasNext()) {
-//                        writer.print(", ");
-//                    }
-//            }
-//            writer.println(")");
-//        }
-//        for(Method method : AllEvents.class.getMethods()) {
-//            for(Class<?> parameterType : method.getParameterTypes()) {
-//                writer.println(EventAdder.generateClassString(parameterType));
-//            }
-//        }
-//        writer.close();
     }
     @SubscribeEvent
     public static void onEvent(PlayerInteractEvent.EntityInteract event) {checkAndRunAllFunctions(event);}
@@ -422,7 +348,6 @@ public class AllEvents {
     public static void onEvent(ConfigChangedEvent.OnConfigChangedEvent event) {checkAndRunAllFunctions(event);}
     @SubscribeEvent
     public static void onEvent(ConfigChangedEvent.PostConfigChangedEvent event) {checkAndRunAllFunctions(event);}
-
 
 
 

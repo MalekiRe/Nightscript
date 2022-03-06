@@ -11,15 +11,33 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import rotn.nightscript.commands.TestCommand;
 import rotn.nightscript.event_adder.MainEventsClass;
 import rotn.nightscript.events.AllEvents;
+import rotn.nightscript.functionalstuff.Memo;
 import rotn.nightscript.parser.NightscriptParser;
+import rotn.nightscript.parser.Pair;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import static rotn.nightscript.EventAdder.*;
+import static rotn.nightscript.event_adder.MainEventsClass.*;
+import static rotn.nightscript.event_adder.MainEventsClass.memoSet;
 
 @Mod(
         modid = Nightscript.MOD_ID,
@@ -37,7 +55,95 @@ public class Nightscript {
     @Mod.Instance(MOD_ID)
     public static Nightscript INSTANCE;
 
-    /**
+    static void doSetup() {
+        HashSet<String> mySet = new HashSet<>();
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("the-file-name.txt", "UTF-8");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        for(Method method : AllEvents.class.getMethods()) {
+            for(Class parameterType : method.getParameterTypes()) {
+                writer.println(EventAdder.generateClassString(parameterType));
+//                if(!eventFunctionsMap.containsKey(Event.class)) {
+//                    System.out.println("doesn't contain event : " + Event.class);
+//                    addEventFunctionsToMap(Event.class);
+//                }
+                if(Event.class.isAssignableFrom(parameterType)) {
+                    getEventFunctions((Class<? extends Event>) parameterType);
+                    for(String s : eventFunctionsMap.get(parameterType).keySet()) {
+                        if(!mySet.contains(s)) {
+                            writer.println("#"+s);
+                            mySet.add(s);
+                        }
+                    }
+                }
+            }
+        }
+        for(String s : autoGenMethods.keySet()) {
+            writer.print(s.substring(1) + "(");
+            PrintWriter finalWriter = writer;
+            for (Iterator<Pair<Method, Memo>> iterator = autoGenMethods.get(s).second.iterator(); iterator.hasNext(); ) {
+                Pair<Method, Memo> myPair = iterator.next();
+                if (!Modifier.isStatic(myPair.first.getModifiers())) {
+                    finalWriter.print("@"+s.substring(1, s.indexOf('.')));
+                    if (myPair.first.getParameters().length != 0) {
+                        finalWriter.print(", ");
+                    }
+                }
+                Parameter[] parameters = myPair.first.getParameters();
+                for (int i = 0; i < parameters.length; i++) {
+                    Parameter p = parameters[i];
+                    finalWriter.print("@"+p.getType().getSimpleName());
+                    if (i + 1 < parameters.length) {
+                        finalWriter.print(", ");
+                    }
+                }
+                if (iterator.hasNext()) {
+                    finalWriter.print(" | ");
+                }
+            }
+            finalWriter.println(")");
+        }
+        for(String s : autoGenConstructors.keySet()) {
+            writer.print(s.substring(1) + "(");
+            PrintWriter finalWriter = writer;
+            for (Iterator<Pair<Constructor, Memo>> iterator = autoGenConstructors.get(s).iterator(); iterator.hasNext(); ) {
+                Pair<Constructor, Memo> myPair = iterator.next();
+                Class[] parameters = myPair.first.getParameterTypes();
+                for (int i = 0; i < parameters.length; i++) {
+                    Class p = parameters[i];
+                    finalWriter.print("@"+p.getSimpleName());
+                    if (i + 1 < parameters.length) {
+                        finalWriter.print(", ");
+                    }
+                }
+                if (iterator.hasNext()) {
+                    finalWriter.print(" | ");
+                }
+            }
+            finalWriter.println(")");
+        }
+        for(String s : memoSet.keySet()) {
+            writer.print(s);
+        }
+        for(String s : memoSet.keySet()) {
+            writer.print(s + "(");
+            for (Iterator<Class> iterator = Arrays.stream(memoSet.get(s).first).iterator(); iterator.hasNext(); ) {
+                Class p = iterator.next();
+                writer.print("@"+p.getSimpleName());
+                if (iterator.hasNext()) {
+                    writer.print(", ");
+                }
+            }
+            writer.println(")");
+        }
+        writer.close();
+    }
+        /**
      * This is the first initialization event. Register tile entities here.
      * The registry events below will have fired prior to entry to this method.
      */
@@ -68,6 +174,7 @@ public class Nightscript {
     @Mod.EventHandler
     public void postinit(FMLPostInitializationEvent event) {
         MainEventsClass mainEventsClass = new MainEventsClass();
+        doSetup();
     }
 
     /**

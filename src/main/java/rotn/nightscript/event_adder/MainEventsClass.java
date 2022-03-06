@@ -63,6 +63,8 @@ public class MainEventsClass {
         makeNewMethod("addStrings", (i1) -> {return (String)i1[0] + (String)i1[1];}, String.class, String.class);
         makeNewMethod("addFloats", (i1) -> {return (Float)i1[0] + (Float)i1[1];}, Float.class, Float.class);
         makeNewMethod("print", (i1) -> {System.out.println("Printing : " + i1[0]); return null;}, Object.class);
+        makeNewMethod("getBlockFromID", (i1) -> {return ForgeRegistries.BLOCKS.getValue((ResourceLocation) i1[0]).getDefaultState();}, ResourceLocation.class);
+        makeNewMethod("getItemFromID", (i1) -> {return ForgeRegistries.ITEMS.getValue((ResourceLocation) i1[0]);}, ResourceLocation.class);
         memoSet.put("repeat", Pair.of(new Class[]{Integer.class, Object.class}, new NonMemo((event, args) -> {
             List objects = (List) args;
             for(int i = 0; i < (Integer) objects.get(0); i++) {
@@ -73,9 +75,7 @@ public class MainEventsClass {
         makeNewMethod("if",  new NonMemo((event, args) -> {
             List arguments = (List) args;
             if((boolean) evaluateOrGetThing(arguments.get(0), event)) {
-                for(int i = 1; i < arguments.size(); i++) {
-                    ((FuncArgPair)arguments.get(i)).evaluate(event);
-                }
+                return evaluateOrGetThing(arguments.get(1), event);
             }
             return null;
         }), boolean.class, Object.class);

@@ -60,6 +60,9 @@ public class NightscriptFunction {
                 //System.out.println("we got: " + memoSet.get(this.functionIdentifier).second);
                 this.lazyEvaluationFunction = memoSet.get(this.functionIdentifier).second;
             } else {
+//                if(this.functionIdentifier.substring(this.functionIdentifier.indexOf('.')).equals("create")) {
+//                    this.functionIdentifier = this.functionIdentifier.substring(0, this.functionIdentifier.indexOf('.')) + "." + this.functionIdentifier.substring(this.functionIdentifier.indexOf('.')).toUpperCase();
+//                }
                 //We delay until the event has gone through and added stuff to the set.
             }
         }
@@ -103,6 +106,9 @@ public class NightscriptFunction {
                             if (temp.first.getParameters().length == (functionArguments.size() - 1) ||
                                     (Modifier.isStatic(temp.first.getModifiers()) && temp.first.getParameters().length == functionArguments.size())) {
                                 matchingLengthArgsSet.add(temp);
+                            } else {
+                                System.out.println("doesn't match : " + temp + " with : " + this.functionIdentifier);
+                                System.out.println("length of params is : " + Arrays.toString(temp.first.getParameters()) + " and, " + functionArguments);
                             }
                         }
                     }
@@ -113,6 +119,9 @@ public class NightscriptFunction {
                             }
                         }
                     }
+                    if(matchingLengthArgsSet.size() == 0 && matchingConstructors.size() == 0) {
+                        System.out.println("error and this func id is : " + this.functionIdentifier);
+                    }
                 }
                 ArrayList<List> listOfLists = new ArrayList<>();
                 return new FuncArgPair(new NonMemo((event, args) -> {
@@ -122,6 +131,7 @@ public class NightscriptFunction {
                         boolean flag = false;
                         int offset = 1;
                         if(Modifier.isStatic(methodMemoPair.first.getModifiers())) {
+                            System.out.println("is static");
                             offset--;
                         }
                         for(int i = 0; i < methodMemoPair.first.getParameters().length; i++) {
@@ -130,9 +140,18 @@ public class NightscriptFunction {
                                 break;
                             }
                             if(!methodMemoPair.first.getParameterTypes()[i].isInstance(list1.get(i+offset))) {
-                                //System.out.println("paramater : " + methodMemoPair.first.getParameterTypes()[i] + " is not instance of : " + list1.get(i+1));
-                                flag = true;
-                                break;
+                                int flag2 = 0;
+                                if(methodMemoPair.first.getParameterTypes()[i].isPrimitive()) {
+                                    if(WRAPPER_TYPE_MAP.get(list1.get(i+offset).getClass()).equals(methodMemoPair.first.getParameterTypes()[i])) {
+                                        flag2 = 1;
+                                    }
+                                }
+                                if(flag2 == 0) {
+                                    System.out.println("paramater : " + methodMemoPair.first.getParameterTypes()[i] + " is not instance of : " + list1.get(i+offset).getClass());
+                                    System.out.println("failed trying to match : " + methodMemoPair.first + " with " + list1);
+                                    flag = true;
+                                    break;
+                                }
                             }
                         }
                         if(flag) {
@@ -158,7 +177,7 @@ public class NightscriptFunction {
                                     }
                                 }
                                 if(flag2 == 0) {
-                                   // System.out.println("paramater : " + constructorMemoPair.first.getParameterTypes()[i] + " is not instance of : " + list1.get(i).getClass());
+                                    System.out.println("paramater : " + constructorMemoPair.first.getParameterTypes()[i] + " is not instance of : " + list1.get(i).getClass());
                                     flag = true;
                                     break;
                                 }
@@ -170,6 +189,7 @@ public class NightscriptFunction {
                         return constructorMemoPair.second.eval(event, list1);
                     }
                     System.err.println("Error in nightscript, tried but could not find a matching builtinFunction for " + matchingLengthArgsSet + matchingConstructors);
+                    System.err.println("posssibles was : " + list1);
                     return null;
                 }), list.toArray());
 
